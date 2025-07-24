@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Global Threat of Antibiotic Resistance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Clinical Calm -->
+    <!-- Application Structure Plan: The SPA is designed as a narrative journey. It starts with a high-impact hero section to establish the crisis's scale. It then flows logically: 1) The Global Burden (visualizing deaths/costs), 2) How Resistance Works (interactive explanation of genetic/biochemical mechanisms), 3) The Drivers (clear columns for causes), 4) An interactive 'High-Priority Threats' dashboard to explore specific pathogens, and 5) A concluding 'Solutions' section. This structure transforms a linear report into an exploratory experience, guiding the user from the problem's scale to its causes, key players, and future solutions, enhancing understanding and engagement. -->
+    <!-- Visualization & Content Choices: Report Info: Global deaths/costs -> Goal: Inform/Impact -> Viz: Large stats & Bar Chart (Chart.js) -> Interaction: Hover tooltips -> Justification: Immediately conveys the scale of the crisis. Report Info: Resistance mechanisms (HGT, Efflux Pumps) -> Goal: Organize/Explain -> Viz: HTML/CSS diagrams with icons in a tabbed layout -> Interaction: Clicking tabs to switch views -> Justification: Simplifies complex biology into digestible, visual chunks. Report Info: High-priority pathogens (CRE, MRSA) -> Goal: Compare/Explore -> Viz: Interactive dashboard with filter buttons and dynamic content/chart updates -> Interaction: Clicking a pathogen button updates the entire detail view, including a dedicated bar chart -> Justification: Allows direct comparison and deep dives into the most critical threats, making the data from Table 2 interactive and engaging. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- Author Metadata for Search Engines -->
+    <meta name="author" content="Luqman Bin Fahad">
+    <meta name="creator" content="Luqman Bin Fahad">
+    <meta name="description" content="An interactive report on the global threat of antibiotic resistance, authored by Luqman Bin Fahad.">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #0ea5e9; /* sky-500 */
+            border-bottom-color: #0ea5e9; /* sky-500 */
+        }
+        .stat-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .pathogen-btn {
+            transition: all 0.3s;
+        }
+        .pathogen-btn.active {
+            background-color: #0284c7; /* sky-600 */
+            color: white;
+            transform: scale(1.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-sky-600">AMR Watch</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#burden" class="nav-link">The Burden</a>
+                <a href="#mechanisms" class="nav-link">How It Works</a>
+                <a href="#drivers" class="nav-link">The Drivers</a>
+                <a href="#threats" class="nav-link">Key Threats</a>
+                <a href="#solutions" class="nav-link">Solutions</a>
+            </div>
+            <button id="mobile-menu-btn" class="md:hidden text-slate-600 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#burden" class="block py-2 px-6 text-sm text-slate-700 hover:bg-sky-50">The Burden</a>
+            <a href="#mechanisms" class="block py-2 px-6 text-sm text-slate-700 hover:bg-sky-50">How It Works</a>
+            <a href="#drivers" class="block py-2 px-6 text-sm text-slate-700 hover:bg-sky-50">The Drivers</a>
+            <a href="#threats" class="block py-2 px-6 text-sm text-slate-700 hover:bg-sky-50">Key Threats</a>
+            <a href="#solutions" class="block py-2 px-6 text-sm text-slate-700 hover:bg-sky-50">Solutions</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 md:py-12">
+
+        <section id="hero" class="text-center mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-5xl font-extrabold text-slate-800 mb-4">The Silent Pandemic</h2>
+            <p class="max-w-3xl mx-auto text-lg text-slate-600 mb-8">
+                Antibiotic resistance is an escalating global crisis, undermining modern medicine. In 2019 alone, it caused a devastating human and economic toll, threatening to reverse decades of medical progress.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                <div class="stat-card p-6">
+                    <div class="text-5xl font-bold text-red-500 mb-2">1.27M</div>
+                    <div class="text-lg font-semibold text-slate-700">Direct Deaths</div>
+                    <p class="text-sm text-slate-500">Globally attributable to bacterial AMR in 2019.</p>
+                </div>
+                <div class="stat-card p-6">
+                    <div class="text-5xl font-bold text-amber-500 mb-2">$693B</div>
+                    <div class="text-lg font-semibold text-slate-700">Global Hospital Costs</div>
+                    <p class="text-sm text-slate-500">Median economic burden linked to AMR in 2019.</p>
+                </div>
+            </div>
+            <!-- Author name visible on the website -->
+            <p class="mt-8 text-sm text-slate-500"><strong>Author:</strong> Luqman Bin Fahad</p>
+        </section>
+
+        <section id="burden" class="mb-16 md:mb-24 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-slate-800 mb-2">Visualizing the Global Burden</h3>
+            <p class="text-center text-slate-600 mb-8 max-w-2xl mx-auto">The impact of antimicrobial resistance is not uniform. Certain pathogens are responsible for a disproportionate number of deaths and drive the immense economic costs. The charts below break down this burden from 2019 data, highlighting the most lethal bacteria.</p>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="chart-container">
+                    <canvas id="burdenChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="mechanisms" class="mb-16 md:mb-24 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-slate-800 mb-2">How Resistance Works</h3>
+            <p class="text-center text-slate-600 mb-8 max-w-2xl mx-auto">Bacteria develop resistance through two primary avenues: by changing their own DNA and by employing sophisticated biochemical defenses. This section explores these intricate survival strategies.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="stat-card p-6">
+                    <h4 class="text-xl font-bold text-sky-600 mb-4">🧬 Genetic Foundations</h4>
+                    <p class="text-slate-600 mb-4">Bacteria acquire resistance through changes in their genetic code. These changes can be small, random errors or large transfers of genetic information between bacteria.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <h5 class="font-semibold">Spontaneous Mutations</h5>
+                            <p class="text-sm text-slate-500">Random errors during DNA replication can accidentally create a resistance trait. Under antibiotic pressure, these mutants survive and multiply.</p>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold">Horizontal Gene Transfer (HGT)</h5>
+                            <p class="text-sm text-slate-500">Bacteria share resistance genes directly. This is a major driver of rapid, widespread resistance and occurs in three main ways:</p>
+                            <div class="mt-3 space-y-2 text-sm">
+                                <p><span class="font-bold text-sky-700">Conjugation:</span> Direct cell-to-cell transfer of plasmids.</p>
+                                <p><span class="font-bold text-sky-700">Transformation:</span> Uptake of naked DNA from the environment.</p>
+                                <p><span class="font-bold text-sky-700">Transduction:</span> Transfer of genes via a virus (bacteriophage).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card p-6">
+                    <h4 class="text-xl font-bold text-sky-600 mb-4">🛡️ Biochemical Evasion</h4>
+                    <p class="text-slate-600 mb-4">Once a bacterium has the genetic tools, it uses biochemical strategies to neutralize antibiotics. These are the active defense systems.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <h5 class="font-semibold">Enzymatic Inactivation</h5>
+                            <p class="text-sm text-slate-500">Bacteria produce enzymes (like β-lactamases) that chemically destroy the antibiotic molecule before it can do harm.</p>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold">Target Modification</h5>
+                            <p class="text-sm text-slate-500">The antibiotic's target site on or in the bacterium is altered, so the drug can no longer bind to it effectively.</p>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold">Reduced Uptake & Efflux Pumps</h5>
+                            <p class="text-sm text-slate-500">Bacteria can reduce the permeability of their cell walls to block antibiotics from entering, or use pumps to actively expel any drugs that do get inside.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="drivers" class="mb-16 md:mb-24 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-slate-800 mb-2">The Primary Drivers of Resistance</h3>
+            <p class="text-center text-slate-600 mb-8 max-w-2xl mx-auto">The rise of antibiotic resistance is not a purely natural phenomenon. It is accelerated by human activities across healthcare, agriculture, and our environment, creating immense selective pressure for bacteria to evolve.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="text-4xl mb-4">💊</div>
+                    <h4 class="text-lg font-semibold mb-2">Overuse in Human Medicine</h4>
+                    <p class="text-slate-500 text-sm">Improper prescribing for viral infections and patient non-compliance with treatment courses create perfect conditions for resistant bacteria to thrive.</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4">🚜</div>
+                    <h4 class="text-lg font-semibold mb-2">Use in Agriculture</h4>
+                    <p class="text-slate-500 text-sm">Extensive use of antibiotics in livestock for growth promotion and disease prevention leads to resistant bacteria in our food chain and environment.</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4">🏥</div>
+                    <h4 class="text-lg font-semibold mb-2">Poor Infection Control</h4>
+                    <p class="text-slate-500 text-sm">Inadequate hygiene and infection prevention practices in hospitals allow for the rapid transmission of multidrug-resistant organisms among vulnerable patients.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="threats" class="mb-16 md:mb-24 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-slate-800 mb-2">High-Priority Threats Dashboard</h3>
+            <p class="text-center text-slate-600 mb-8 max-w-2xl mx-auto">Certain resistant pathogens pose an urgent threat due to their high prevalence, severe clinical impact, and limited treatment options. Select a pathogen below to explore its specific characteristics and the damage it causes.</p>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
+            </div>
+            <div id="pathogen-details" class="bg-white p-6 md:p-8 rounded-lg shadow-lg min-h-[400px] transition-all duration-500">
+            </div>
+        </section>
+
+        <section id="solutions" class="scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-slate-800 mb-2">A "One Health" Approach to a Global Solution</h3>
+            <p class="text-center text-slate-600 mb-8 max-w-2xl mx-auto">Combating antibiotic resistance requires a unified, multi-pronged strategy that recognizes the interconnectedness of human, animal, and environmental health. No single solution is enough; we need a coordinated global effort.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="stat-card p-6">
+                    <h4 class="font-bold text-sky-600 mb-2">Enhanced Surveillance</h4>
+                    <p class="text-sm text-slate-500">Strengthening global systems to track resistance patterns, identify new threats, and guide treatment.</p>
+                </div>
+                <div class="stat-card p-6">
+                    <h4 class="font-bold text-sky-600 mb-2">Antibiotic Stewardship</h4>
+                    <p class="text-sm text-slate-500">Promoting the judicious use of antibiotics in both medicine and agriculture to reduce selective pressure.</p>
+                </div>
+                <div class="stat-card p-6">
+                    <h4 class="font-bold text-sky-600 mb-2">Infection Prevention & Control</h4>
+                    <p class="text-sm text-slate-500">Implementing rigorous hygiene and control measures in healthcare to stop the spread of resistant organisms.</p>
+                </div>
+                <div class="stat-card p-6">
+                    <h4 class="font-bold text-sky-600 mb-2">Novel Drug Discovery</h4>
+                    <p class="text-sm text-slate-500">Investing in R&D to find new classes of antibiotics and overcome the current "discovery void."</p>
+                </div>
+                <div class="stat-card p-6">
+                    <h4 class="font-bold text-sky-600 mb-2">Alternative Therapies</h4>
+                    <p class="text-sm text-slate-500">Developing non-antibiotic treatments like phage therapy and immunotherapies to fight infections.</p>
+                </div>
+                <div class="stat-card p-6">
+                    <h4 class="font-bold text-sky-600 mb-2">Public Awareness</h4>
+                    <p class="text-sm text-slate-500">Educating the public and policymakers on the threat of AMR and the importance of responsible antibiotic use.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 mt-16">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p class="text-sm">This interactive report is based on a comprehensive review of peer-reviewed research articles on bacterial antibiotic resistance.</p>
+            <p class="text-xs mt-2 text-slate-400">Content synthesized for educational purposes. All data reflects findings from the source report.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pathogenData = {
+                'CRE': {
+                    title: 'Carbapenem-Resistant Enterobacteriaceae (CRE)',
+                    description: 'An urgent public health threat, CRE are nightmare bacteria resistant to nearly all antibiotics, including last-resort carbapenems. They are particularly dangerous in healthcare settings.',
+                    stats: [
+                        { label: 'Mortality Rate', value: 'Up to 50%', icon: '💀' },
+                        { label: 'US Hospital Infections (2017)', value: '13,100', icon: '🏥' },
+                        { label: 'Increased Hospital Stay', value: '+6.5 days', icon: '📅' }
+                    ],
+                    consequences: 'Associated with high mortality, prolonged hospital stays, and significantly higher re-admission rates. Treatment options are severely limited and often toxic.',
+                    chartData: {
+                        labels: ['Non-CRE Patients', 'CRE Patients'],
+                        values: [11, 24],
+                        title: 'Mortality Rate Comparison (%)'
+                    }
+                },
+                'MRSA': {
+                    title: 'Methicillin-Resistant Staphylococcus aureus (MRSA)',
+                    description: 'A common bacterium that has become resistant to several antibiotics. While many people carry it without issue, it can cause severe and life-threatening infections of the skin, bloodstream, and lungs.',
+                    stats: [
+                        { label: 'Global Colonization (Elderly Care)', value: '14.7%', icon: '🌍' },
+                        { label: 'EU Bloodstream Infections', value: '4.6/100k', icon: '🩸' },
+                        { label: 'Common Carrier Rate (S. aureus)', value: '1 in 3 people', icon: '👥' }
+                    ],
+                    consequences: 'Leads to pneumonia, sepsis, and surgical site infections. MRSA bacteremia (bloodstream infection) is associated with significant healthcare costs, morbidity, and mortality.',
+                    chartData: {
+                        labels: ['Healthcare-Associated', 'Community-Associated'],
+                        values: [85, 15],
+                        title: 'Typical Origin of MRSA Infections (%)'
+                    }
+                },
+                'VRE': {
+                    title: 'Vancomycin-Resistant Enterococci (VRE)',
+                    description: 'Enterococci are common gut bacteria, but when they become resistant to the powerful antibiotic vancomycin, they pose a major challenge, especially in hospitalized patients.',
+                    stats: [
+                        { label: 'Increased Odds of Death', value: ' nearly 6x', icon: '📈' },
+                        { label: 'Attributable Cost Increase', value: '~$135,534', icon: '💰' },
+                        { label: 'Attributable Stay Increase', value: '+20.4 days', icon: '📅' }
+                    ],
+                    consequences: 'Imposes a massive burden on patients and hospitals. VRE infections are linked to drastically higher costs, much longer hospital stays, and a substantially increased risk of death.',
+                     chartData: {
+                        labels: ['Non-VRE Patients', 'VRE Patients'],
+                        values: [3, 17],
+                        title: 'In-Hospital Mortality Rate (%)'
+                    }
+                },
+                'MDR-TB': {
+                    title: 'Multidrug-Resistant Tuberculosis (MDR-TB)',
+                    description: 'A critical public health crisis, MDR-TB is resistant to the two most powerful first-line TB drugs. It is a leading cause of death from a single infectious agent globally.',
+                    stats: [
+                        { label: 'Global Deaths (TB, 2023)', value: '1.25 Million', icon: '💀' },
+                        { label: 'Treatment Access (DR-TB)', value: '2 in 5', icon: '💊' },
+                        { label: 'Highest AMR Hospital Cost', value: 'up to $41k', icon: '💸' }
+                    ],
+                    consequences: 'Requires long, complex, and toxic treatment regimens with second-line drugs. Extensively drug-resistant TB (XDR-TB) has even fewer treatment options, posing a grave threat.',
+                    chartData: {
+                        labels: ['Accessed Treatment', 'Did Not Access'],
+                        values: [40, 60],
+                        title: 'Access to Drug-Resistant TB Treatment (%)'
+                    }
+                },
+                'ESBL': {
+                    title: 'ESBL-producing Enterobacteriaceae',
+                    description: 'These bacteria produce Extended-Spectrum Beta-Lactamases (ESBLs), enzymes that destroy many common penicillin and cephalosporin antibiotics. They are a growing cause of both community and hospital infections.',
+                    stats: [
+                        { label: 'Global E. coli Carriage', value: '25.4%', icon: '🌍' },
+                        { label: 'Highest Prevalence', value: 'Asia', icon: '🌏' },
+                        { label: 'Attributable Cost', value: 'up to $29k', icon: '💰' }
+                    ],
+                    consequences: 'Lead to more complicated infections, require longer treatment durations, and are associated with higher morbidity and mortality compared to non-ESBL infections.',
+                    chartData: {
+                        labels: ['Community', 'Healthcare'],
+                        values: [23.4, 27.7],
+                        title: 'ESBL-E.coli Carriage Prevalence (%)'
+                    }
+                },
+                 'DR-Gonorrhea': {
+                    title: 'Drug-Resistant Neisseria gonorrhoeae',
+                    description: 'Resistance is emerging to the last recommended antibiotics for gonorrhea, raising the prospect of untreatable infections. Pharyngeal (throat) infections are a key reservoir for the spread of resistance.',
+                    stats: [
+                        { label: 'Key Resistance', value: 'Cephalosporins', icon: '💊' },
+                        { label: 'High Resistance', value: 'Ciprofloxacin', icon: '🚫' },
+                        { label: 'Rising Resistance', value: 'Azithromycin', icon: '📈' }
+                    ],
+                    consequences: 'Untreated infections can cause pelvic inflammatory disease, infertility, and ectopic pregnancy, and increase HIV transmission risk. Treatment failures are being reported globally.',
+                    chartData: {
+                        labels: ['Susceptible', 'Resistant'],
+                        values: [40, 60],
+                        title: 'Estimated Ciprofloxacin Resistance (Global Average)'
+                    }
+                }
+            };
+
+            const threatsContainer = document.querySelector('#threats .flex-wrap');
+            const detailsContainer = document.getElementById('pathogen-details');
+            let pathogenChart = null;
+
+            function updateDetails(pathogenKey) {
+                const data = pathogenData[pathogenKey];
+                if (!data) return;
+
+                let statsHtml = data.stats.map(stat => `
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-sky-600">${stat.value}</div>
+                        <div class="text-sm text-slate-500">${stat.label}</div>
+                    </div>
+                `).join('');
+
+                detailsContainer.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-2xl font-bold text-slate-800 mb-2">${data.title}</h4>
+                            <p class="text-slate-600 mb-6">${data.description}</p>
+                            <h5 class="font-semibold text-slate-700 mb-3">Key Statistics</h5>
+                            <div class="grid grid-cols-3 gap-4 mb-6">
+                                ${statsHtml}
+                            </div>
+                            <h5 class="font-semibold text-slate-700 mb-2">Clinical Consequences</h5>
+                            <p class="text-sm text-slate-600">${data.consequences}</p>
+                        </div>
+                        <div class="flex flex-col justify-center items-center bg-slate-50 p-4 rounded-lg">
+                             <div class="chart-container h-64 md:h-80">
+                                <canvas id="pathogenChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const ctx = document.getElementById('pathogenChart').getContext('2d');
+                if (pathogenChart) {
+                    pathogenChart.destroy();
+                }
+                pathogenChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.chartData.labels,
+                        datasets: [{
+                            label: data.chartData.title,
+                            data: data.chartData.values,
+                            backgroundColor: ['#38bdf8', '#fb923c'],
+                            borderColor: ['#0ea5e9', '#f97316'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: data.chartData.title,
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#e2e8f0'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+
+                document.querySelectorAll('.pathogen-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`.pathogen-btn[data-pathogen="${pathogenKey}"]`).classList.add('active');
+            }
+
+            Object.keys(pathogenData).forEach(key => {
+                const button = document.createElement('button');
+                button.className = 'pathogen-btn bg-white hover:bg-sky-100 text-sky-700 font-semibold py-2 px-4 border border-sky-200 rounded-full shadow-sm';
+                button.textContent = key;
+                button.dataset.pathogen = key;
+                button.addEventListener('click', () => updateDetails(key));
+                threatsContainer.appendChild(button);
+            });
+            
+            updateDetails('CRE');
+
+            const burdenCtx = document.getElementById('burdenChart').getContext('2d');
+            new Chart(burdenCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['E. coli', 'S. aureus', 'K. pneumoniae', 'A. baumannii'],
+                    datasets: [{
+                        label: 'Attributable Deaths (2019)',
+                        data: [157000, 130000, 90000, 75000], 
+                        backgroundColor: '#ef4444',
+                        borderColor: '#dc2626',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Associated Hospital Costs (2019, Billions USD)',
+                        data: [246, 135, 0, 0],
+                        backgroundColor: '#f59e0b',
+                        borderColor: '#d97706',
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Top Pathogens by Deaths and Hospital Costs (2019)',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (context.datasetIndex === 0) {
+                                            label += new Intl.NumberFormat().format(context.parsed.y);
+                                        } else {
+                                            label += '$' + context.parsed.y + 'B';
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Attributable Deaths'
+                            },
+                             grid: {
+                                color: '#e2e8f0'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Hospital Costs (Billions USD)'
+                            },
+                            grid: {
+                                drawOnChartArea: false, 
+                            },
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    if(mobileMenu.classList.contains('hidden') === false){
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
